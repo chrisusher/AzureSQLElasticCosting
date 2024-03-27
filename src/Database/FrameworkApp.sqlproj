@@ -14,6 +14,9 @@
   <ItemGroup>
     <PostDeploy Include="Data\VersionHistory.v1.0.0.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Local.publish.xml" />
+  </ItemGroup>
   <Target Name="BeforeBuild">
     <Delete Files="$(BaseIntermediateOutputPath)\project.assets.json" />
   </Target>

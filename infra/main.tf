@@ -37,7 +37,7 @@ resource "azurerm_mssql_elasticpool" "sql_server_elasticpool" {
 
 resource "azurerm_mssql_database" "database" {
   count           = 6
-  name            = "elasticdb-${count.index}"
+  name            = "elasticdb-${count.index + 1}"
   server_id       = azurerm_mssql_server.sql_server.id
   elastic_pool_id = azurerm_mssql_elasticpool.sql_server_elasticpool.id
 }
