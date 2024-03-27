@@ -20,7 +20,8 @@ namespace FunctionApp.Services
                 InitialCatalog = $"elasticdb-{databaseNumber}",
                 DataSource = configuration["DB_SERVER"],
                 UserID = "adminuser",
-                Password = configuration["DB_PASSWORD"]
+                Password = configuration["DB_PASSWORD"],
+                TrustServerCertificate = true
             };
 
             var dbOptions = new DbContextOptionsBuilder<LogDb>();
@@ -31,7 +32,9 @@ namespace FunctionApp.Services
 
         public async Task<LogTable> GetLastLogAsync()
         {
-            return await _dbContext.Log.LastOrDefaultAsync();
+            return await _dbContext.Log
+                .OrderBy(x => x.LogDate)
+                .LastOrDefaultAsync();
         }
 
         public async Task<LogTable> LogAsync(string message)

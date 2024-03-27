@@ -19,8 +19,12 @@ public class LoggingFunction
         _logger = loggerFactory.CreateLogger<LoggingFunction>();
     }
 
-    [FunctionName(nameof(LoggingFunction))]
-    public async Task RunAsync([TimerTrigger("0 */10 * * * *")] TimerInfo timerInfo, ILogger log)
+    [Function(nameof(LoggingFunction))]
+#if RELEASE
+    public async Task RunAsync([TimerTrigger("0 */10 * * * *")] TimerInfo timerInfo)
+#elif DEBUG
+    public async Task RunAsync([TimerTrigger("0 */1 * * * *")] TimerInfo timerInfo)
+#endif
     {
         if (!_config.GetValue<bool>("ENABLE_LOGGING"))
         {
@@ -31,12 +35,12 @@ public class LoggingFunction
             return;
         }
 
-        log.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
+        _logger.LogInformation($"C# Timer trigger function executed at: {DateTime.Now}");
         var dbCount = _config.GetValue<int>("DATABASE_COUNT");
 
         var message = _faker.Rant.Review();
 
-        for (int index = 0; index < dbCount; index++)
+        for (int index = 1; index <= dbCount; index++)
         {
             try
             {
@@ -48,13 +52,13 @@ public class LoggingFunction
                     _logger.LogInformation("Most Recent had Id of {logId}, Message of '{message}' and Date of '{date}'", lastLog.LogId, lastLog.LogText, lastLog.LogDate);
                 }
 
-                await logDb.LogAsync(message);
+                var logEntry = await logDb.LogAsync(message);
 
-                _logger.LogInformation("Added Log with Id of {logId}, Message of '{message}' and Date of '{date}'", lastLog.LogId, lastLog.LogText, lastLog.LogDate);
+                _logger.LogInformation("Added Log with Id of {logId}, Message of '{message}' and Date of '{date}'", logEntry.LogId, logEntry.LogText, logEntry.LogDate);
             }
             catch (Exception ex)
             {
-                log.LogError(ex, ex.Message);
+                _logger.LogError(ex, ex.Message);
             }
         }
     }
