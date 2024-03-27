@@ -28,13 +28,12 @@ resource "azurerm_storage_account" "function_app_storage_account" {
 }
 
 # Create a Service Plan for Linux Function
-
 resource "azurerm_service_plan" "function_app_service_plan" {
   location            = azurerm_resource_group.function_app_resource_group.location
   name                = "elastic-sql-function-app-service-plan"
   resource_group_name = azurerm_resource_group.function_app_resource_group.name
-  os_type = "Linux"
-  sku_name = "Y1"
+  os_type             = "Linux"
+  sku_name            = "Y1"
 }
 
 # Create App Insights for FunctionApp to log to
@@ -50,23 +49,26 @@ resource "azurerm_linux_function_app" "function_app" {
   name                       = "elastic-sql-function-app"
   location                   = azurerm_resource_group.function_app_resource_group.location
   resource_group_name        = azurerm_resource_group.function_app_resource_group.name
-  service_plan_id        = azurerm_service_plan.function_app_service_plan.id
+  service_plan_id            = azurerm_service_plan.function_app_service_plan.id
   storage_account_name       = azurerm_storage_account.function_app_storage_account.name
   storage_account_access_key = azurerm_storage_account.function_app_storage_account.primary_access_key
 
   site_config {
     application_stack {
-      dotnet_version = "8.0"
+      dotnet_version              = "8.0"
+      use_dotnet_isolated_runtime = true
     }
+
+    app_scale_limit = 1
   }
 
   # Create some initial settings for the Environment Variables that are required
   app_settings = {
-    "DATABASE_COUNT" = var.database_count
-    "DB_SERVER" = "localhost"
-    "DB_PASSWORD" = "P@ssw0rd!"
-    "ENABLE_LOGGING" = false
-    "END_DATE" = "2024-03-30T23:59:59.999Z"
+    "DATABASE_COUNT"                 = var.database_count
+    "DB_SERVER"                      = "localhost"
+    "DB_PASSWORD"                    = "P@ssw0rd!"
+    "ENABLE_LOGGING"                 = false
+    "END_DATE"                       = "2024-03-30T23:59:59.999Z"
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.function_app_application_insights.instrumentation_key
   }
 }
