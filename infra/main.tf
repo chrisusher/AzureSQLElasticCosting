@@ -65,23 +65,28 @@ resource "azurerm_linux_function_app" "function_app" {
   # Create some initial settings for the Environment Variables that are required
   app_settings = {
     "DATABASE_COUNT"                 = var.database_count
-    "DB_SERVER"                      = "localhost"
+    "DB_SERVER"                      = "elastic-sql-server-${var.database_count}-dbs.database.windows.net"
     "DB_PASSWORD"                    = "P@ssw0rd!"
     "ENABLE_LOGGING"                 = false
-    "END_DATE"                       = "2024-03-30T23:59:59.999Z"
+    "END_DATE"                       = "03/29/2024 12:00:00"
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.function_app_application_insights.instrumentation_key
   }
 }
 
-# resource "azurerm_resource_group" "resource_group" {
-#   name     = "elastic-sql-${var.database_count}-databases"
-#   location = "West Europe"
-# }
+resource "azurerm_resource_group" "resource_group" {
+  name     = "elastic-sql-6-databases"
+  location = "West Europe"
+}
+
+resource "azurerm_resource_group" "resource_group2" {
+  name     = "elastic-sql-3-databases"
+  location = "West Europe"
+}
 
 # resource "azurerm_mssql_server" "sql_server" {
 #   name                         = "elastic-sql-server-${var.database_count}-dbs"
-#   resource_group_name          = azurerm_resource_group.resource_group.name
-#   location                     = azurerm_resource_group.resource_group.location
+#   resource_group_name          = azurerm_resource_group.resource_group2.name
+#   location                     = azurerm_resource_group.resource_group2.location
 #   version                      = "12.0"
 #   administrator_login          = "adminuser"
 #   administrator_login_password = "P@ssw0rd!"
@@ -89,24 +94,33 @@ resource "azurerm_linux_function_app" "function_app" {
 
 # resource "azurerm_mssql_elasticpool" "sql_server_elasticpool" {
 #   name                = "sql-elasticpool-${var.database_count}-dbs"
-#   resource_group_name = azurerm_resource_group.resource_group.name
-#   location            = azurerm_resource_group.resource_group.location
+#   resource_group_name = azurerm_resource_group.resource_group2.name
+#   location            = azurerm_resource_group.resource_group2.location
 #   server_name         = azurerm_mssql_server.sql_server.name
 #   max_size_gb         = 10
+
 #   sku {
-#     tier     = "GeneralPurpose"
-#     name     = "GP_Gen5"
+#     name     = "GP_Gen5"        # Choose the appropriate service tier (Basic, Standard, or Premium)
+#     tier     = "GeneralPurpose" # Specify the tier (optional, based on the chosen service tier)
 #     family   = "Gen5"
-#     capacity = 4
+#     capacity = 10
 #   }
+
 #   per_database_settings {
-#     max_capacity = 3
-#     min_capacity = 1
+#     min_capacity = 0.5 # Minimum vCores per database (optional)
+#     max_capacity = 6   # Maximum vCores per database
 #   }
 # }
 
+# resource "azurerm_mssql_firewall_rule" "sql_server_function_firewall_rule" {
+#   name             = "AllowAccessFromAzure"
+#   server_id        = azurerm_mssql_server.sql_server.id
+#   start_ip_address = "0.0.0.0"
+#   end_ip_address   = "0.0.0.0"
+# }
+
 # resource "azurerm_mssql_database" "database" {
-#   count           = 6
+#   count           = var.database_count
 #   name            = "elasticdb-${count.index + 1}"
 #   server_id       = azurerm_mssql_server.sql_server.id
 #   elastic_pool_id = azurerm_mssql_elasticpool.sql_server_elasticpool.id
